@@ -4,7 +4,6 @@ package cmd
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/EvgeniyBudaev/gophkeeper/cmd/client/internal/logic"
 	"github.com/EvgeniyBudaev/gophkeeper/internal/logger"
 	"github.com/spf13/cobra"
@@ -80,9 +79,7 @@ var listRecordsCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println("listRecordsCmd_1")
 		records, err := logic.ListRecords(context.Background(), logger)
-		fmt.Println("listRecordsCmd_2")
 		if err != nil {
 			logger.Errorf("error: %v", err)
 		}

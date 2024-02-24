@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"github.com/EvgeniyBudaev/gophkeeper/internal/adapters/store"
@@ -73,45 +75,36 @@ func run() error {
 		l.Fatalf("error creating server: %w", err)
 	}
 
-	//go func(errs chan<- error) {
-	//	if c.EnableHTTPS {
-	//		_, errCert := os.ReadFile(c.TLSCertPath)
-	//		_, errKey := os.ReadFile(c.TLSKeyPath)
-	//		if errors.Is(errCert, os.ErrNotExist) || errors.Is(errKey, os.ErrNotExist) {
-	//			privateKey, certBytes, err := app.CreateCertificates(l.Named("certs-builder"))
-	//			if err != nil {
-	//				errs <- fmt.Errorf("error creating tls certs: %w", err)
-	//				return
-	//			}
-	//			if err := app.WriteCertificates(certBytes, c.TLSCertPath, privateKey, c.TLSKeyPath, l); err != nil {
-	//				errs <- fmt.Errorf("error writing tls certs: %w", err)
-	//				return
-	//			}
-	//		}
-	//		srv.TLSConfig = &tls.Config{
-	//			MinVersion:         tls.VersionTLS12,
-	//			ClientAuth:         tls.RequestClientCert,
-	//			KeyLogWriter:       bufio.NewWriter(os.Stdout),
-	//			InsecureSkipVerify: true,
-	//		}
-	//		if err := srv.ListenAndServeTLS(c.TLSCertPath, c.TLSKeyPath); err != nil {
-	//			if errors.Is(err, http.ErrServerClosed) {
-	//				return
-	//			}
-	//			errs <- fmt.Errorf("run tls server has failed: %w", err)
-	//			return
-	//		}
-	//	}
-	//	l.Warnf("serving http server %s without TLS: Use only for development", srv.Addr)
-	//	if err := srv.ListenAndServe(); err != nil {
-	//		if errors.Is(err, http.ErrServerClosed) {
-	//			return
-	//		}
-	//		errs <- fmt.Errorf("run server has failed: %w", err)
-	//	}
-	//}(componentsErrs)
-
 	go func(errs chan<- error) {
+		if c.EnableHTTPS {
+			_, errCert := os.ReadFile(c.TLSCertPath)
+			_, errKey := os.ReadFile(c.TLSKeyPath)
+			if errors.Is(errCert, os.ErrNotExist) || errors.Is(errKey, os.ErrNotExist) {
+				privateKey, certBytes, err := app.CreateCertificates(l.Named("certs-builder"))
+				if err != nil {
+					errs <- fmt.Errorf("error creating tls certs: %w", err)
+					return
+				}
+				if err := app.WriteCertificates(certBytes, c.TLSCertPath, privateKey, c.TLSKeyPath, l); err != nil {
+					errs <- fmt.Errorf("error writing tls certs: %w", err)
+					return
+				}
+			}
+			srv.TLSConfig = &tls.Config{
+				MinVersion:         tls.VersionTLS12,
+				ClientAuth:         tls.RequestClientCert,
+				KeyLogWriter:       bufio.NewWriter(os.Stdout),
+				InsecureSkipVerify: true,
+			}
+			if err := srv.ListenAndServeTLS(c.TLSCertPath, c.TLSKeyPath); err != nil {
+				if errors.Is(err, http.ErrServerClosed) {
+					return
+				}
+				errs <- fmt.Errorf("run tls server has failed: %w", err)
+				return
+			}
+		}
+		l.Infof("serving http server %s without TLS: Use only for development", srv.Addr)
 		if err := srv.ListenAndServe(); err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
 				return
