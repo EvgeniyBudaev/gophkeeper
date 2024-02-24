@@ -8,18 +8,21 @@ import (
 	"flag"
 	"fmt"
 	"github.com/caarlos0/env/v6"
+	"github.com/joho/godotenv"
+	"github.com/kelseyhightower/envconfig"
+	"go.uber.org/zap"
 	"os"
 )
 
 // ServerConfig описывает структуру конфигурации приложения
 type ServerConfig struct {
-	RunAddr     string `json:"server_address" env:"SERVER_ADDRESS"`
-	DatabaseDSN string `json:"database_dsn" env:"DATABASE_DSN"`
-	Config      string `json:"-" env:"CONFIG"`
-	TLSCertPath string `json:"tls_cert_path" env:"TLS_CERT_PATH"`
-	TLSKeyPath  string `json:"tls_key_path" env:"TLS_KEY_PATH"`
-	LogLevel    string `env:"LOG_LEVEL" envDefault:"debug"`
-	EnableHTTPS bool   `json:"enable_https" env:"ENABLE_HTTPS"`
+	RunAddr     string `json:"server_address" env:"SERVER_ADDRESS" envconfig:"SERVER_ADDRESS"`
+	DatabaseDSN string `json:"database_dsn" env:"DATABASE_DSN" envconfig:"DATABASE_DSN"`
+	Config      string `json:"-" env:"CONFIG" envconfig:"CONFIG"`
+	TLSCertPath string `json:"tls_cert_path" env:"TLS_CERT_PATH" envconfig:"TLS_CERT_PATH"`
+	TLSKeyPath  string `json:"tls_key_path" env:"TLS_KEY_PATH" envconfig:"TLS_KEY_PATH"`
+	LogLevel    string `env:"LOG_LEVEL" envDefault:"debug" envconfig:"LOG_LEVEL"`
+	EnableHTTPS bool   `json:"enable_https" env:"ENABLE_HTTPS" envconfig:"ENABLE_HTTPS"`
 }
 
 var serverConfig ServerConfig
@@ -55,4 +58,18 @@ func ParseFlags() (*ServerConfig, error) {
 	}
 
 	return &serverConfig, nil
+}
+
+func Load(l *zap.SugaredLogger) (*ServerConfig, error) {
+	var cfg ServerConfig
+	if err := godotenv.Load(); err != nil {
+		l.Debug("error func Load, method Load by path internal/config/config.go", zap.Error(err))
+		return nil, err
+	}
+	err := envconfig.Process("", &cfg)
+	if err != nil {
+		l.Debug("error func Load, method Process by path internal/config/config.go", zap.Error(err))
+		return nil, err
+	}
+	return &cfg, nil
 }

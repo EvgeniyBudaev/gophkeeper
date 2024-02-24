@@ -4,6 +4,8 @@ package app
 import (
 	"bytes"
 	"crypto/md5"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,9 +15,9 @@ import (
 	"github.com/EvgeniyBudaev/gophkeeper/internal/models"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"os"
+	"time"
 )
 
 // App - структура приложения
@@ -63,11 +65,12 @@ func (e *RecordNotFoundError) Error() string {
 
 // Login - логин пользователя
 func (a *App) Login(c *gin.Context) {
+	a.logger.Info("/api/user/login")
 	req := c.Request
 	res := c.Writer
 	userCreds := models.User{}
 	if err := json.NewDecoder(req.Body).Decode(&userCreds); err != nil {
-		a.logger.Errorf("user credentials cannot be decoded: %v", err)
+		a.logger.Debug("user credentials cannot be decoded: %v", zap.Error(err))
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -78,23 +81,25 @@ func (a *App) Login(c *gin.Context) {
 	u, err := a.store.GetUser(c, &models.User{Login: userReq.Login})
 	if err != nil {
 		if errors.Is(err, store.ErrLoginNotFound) {
-			a.logger.Errorf("login not found: %v", err)
+			a.logger.Debug("login not found: %v", zap.Error(err))
 			res.WriteHeader(http.StatusUnauthorized)
 			return
 		} else {
-			a.logger.Errorf("cannot get user: %v", err)
+			a.logger.Debug("cannot get user: %v", zap.Error(err))
 			res.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 	}
-	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(userReq.Password)); err != nil {
+	ok := verifyPassword(userReq.Password, u.Password)
+	if !ok {
+		a.logger.Debug("cannot verifyPassword: %v", zap.Error(err))
 		res.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	userReq.ID = u.ID
 	jwt, err := auth.BuildJWTString(userReq.ID)
 	if err != nil {
-		a.logger.Errorf("cannot build jwt string for authorized user: %v", err)
+		a.logger.Debug("cannot build jwt string for authorized user: %v", zap.Error(err))
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -106,11 +111,12 @@ func (a *App) Login(c *gin.Context) {
 
 // Register - регистрация пользователя
 func (a *App) Register(c *gin.Context) {
+	a.logger.Info("/api/user/register")
 	req := c.Request
 	res := c.Writer
 	userCreds := models.User{}
 	if err := json.NewDecoder(req.Body).Decode(&userCreds); err != nil {
-		a.logger.Errorf("body cannot be decoded: %v", err)
+		a.logger.Debug("body cannot be decoded: %v", zap.Error(err))
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -118,32 +124,25 @@ func (a *App) Register(c *gin.Context) {
 		Login:    userCreds.Login,
 		Password: userCreds.Password,
 	}
-	hash, err := bcrypt.GenerateFromPassword([]byte(userReq.Password), bcryptCost)
-	if err != nil {
-		a.logger.Errorf("cannot hash pass: %v", err)
-		res.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	userReq.Password = string(hash)
-	if _, err = a.store.CreateUser(c, &userReq); err != nil {
+	if _, err := a.store.CreateUser(c, &userReq); err != nil {
 		if errors.Is(err, store.ErrDuplicateLogin) {
-			a.logger.Errorf("login already taken: %v", err)
+			a.logger.Debug("login already taken: %v", zap.Error(err))
 			res.WriteHeader(http.StatusConflict)
 			return
 		} else {
-			a.logger.Errorf("cannot operate user creds: %v", err)
+			a.logger.Debug("cannot operate user creds: %v", zap.Error(err))
 			res.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 	}
 	if err := os.MkdirAll(fmt.Sprintf("./userdata/%s-%d/", userReq.Login, userReq.ID), 0700); err != nil {
-		a.logger.Errorf("cannot create user folder: %v", err)
+		a.logger.Debug("cannot create user folder: %v", zap.Error(err))
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	jwt, err := auth.BuildJWTString(userReq.ID)
 	if err != nil {
-		a.logger.Errorf("cannot build jwt string: %v", err)
+		a.logger.Debug("cannot build jwt string: %v", zap.Error(err))
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -155,45 +154,50 @@ func (a *App) Register(c *gin.Context) {
 
 // PutDataRecord - запись данных
 func (a *App) PutDataRecord(c *gin.Context) {
+	a.logger.Info("/")
 	userID := c.GetUint64(auth.UserIDKey.ToString())
 	req := c.Request
 	res := c.Writer
 	if userID == 0 {
+		a.logger.Debug("user unauthorized")
 		res.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	var record models.DataRecordRequest
 	if err := json.NewDecoder(req.Body).Decode(&record); err != nil {
-		a.logger.Errorf("cannot decode body: %w", err)
+		a.logger.Debug("cannot decode body: %w", zap.Error(err))
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	parts := bytes.Split([]byte(record.Data), []byte(":"))
 	if len(parts) <= 1 {
+		a.logger.Debug("cannot parts <= 1")
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	if record.Type == models.PASS || record.Type == models.TEXT {
 		checksum := fmt.Sprintf("%x", md5.Sum([]byte(record.Data)))
 		if record.Checksum != checksum {
-			a.logger.Errorf("wrong checksum from request, corrupted data")
+			a.logger.Debug("wrong checksum from request, corrupted data")
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
 	}
 	data := &models.DataRecord{
-		Type:    record.Type,
-		Name:    record.Name,
-		Blocked: false,
+		UploadedAt: time.Now(),
+		Type:       record.Type,
+		Checksum:   fmt.Sprintf("%x", md5.Sum([]byte(record.Data))),
+		Data:       record.Data,
+		FilePath:   "",
+		UserID:     userID,
+		Name:       record.Name,
+		Blocked:    false,
 	}
 	if record.ID != 0 {
 		data.ID = record.ID
 	}
-	data.Checksum = fmt.Sprintf("%x", md5.Sum([]byte(record.Data)))
-	data.Data = record.Data
-	data.UserID = userID
-	if err := a.store.PutDataRecord(c, data, userID); err != nil {
-		a.logger.Errorf("unhandled error: %v", err)
+	if err := a.store.PutDataRecord(c, data); err != nil {
+		a.logger.Debug("unhandled error: %v", zap.Error(err))
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -202,14 +206,18 @@ func (a *App) PutDataRecord(c *gin.Context) {
 
 // GetDataRecord - получение записи
 func (a *App) GetDataRecord(c *gin.Context) {
+	a.logger.Info("/:name")
 	res := c.Writer
 	recordName := c.Param("name")
 	userID := c.GetUint64(auth.UserIDKey.ToString())
 
 	if userID == 0 {
+		a.logger.Debug("user unauthorized")
 		res.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+	fmt.Println("userID:", userID)
+	fmt.Println("recordName:", recordName)
 	record, err := a.store.GetUserRecord(c, recordName, userID)
 	if err != nil {
 		var recordNotFoundError *RecordNotFoundError
@@ -217,7 +225,7 @@ func (a *App) GetDataRecord(c *gin.Context) {
 			res.WriteHeader(http.StatusNotFound)
 			return
 		}
-		a.logger.Errorf("error getting user record: %v", err)
+		a.logger.Debug("error getting user record: %v", zap.Error(err))
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -226,6 +234,7 @@ func (a *App) GetDataRecord(c *gin.Context) {
 
 // GetDataRecords - получение записей пользователя
 func (a *App) GetDataRecords(c *gin.Context) {
+	a.logger.Info("/list")
 	userID := c.GetUint64(auth.UserIDKey.ToString())
 	res := c.Writer
 	if userID == 0 {
@@ -238,9 +247,15 @@ func (a *App) GetDataRecords(c *gin.Context) {
 			res.WriteHeader(http.StatusNoContent)
 			return
 		}
-		a.logger.Errorf("error getting user records: %v", err)
+		a.logger.Debug("error getting user records: %v", zap.Error(err))
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	c.JSON(http.StatusOK, records)
+}
+
+func verifyPassword(inputPassword, storedHash string) bool {
+	hash := sha256.Sum256([]byte(inputPassword))
+	hashedInput := hex.EncodeToString(hash[:])
+	return hashedInput == storedHash
 }

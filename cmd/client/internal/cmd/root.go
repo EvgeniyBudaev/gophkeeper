@@ -22,7 +22,7 @@ to quickly create a Cobra application.`,
 	}
 )
 
-// Execute выполняет корневую команду
+// Execute - запускает выполнение командной строки (CLI) приложения, созданного с использованием Cobra.
 func Execute() error {
 	return rootCmd.Execute()
 }
@@ -31,7 +31,7 @@ func Execute() error {
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.cobra.yaml)")
-	rootCmd.PersistentFlags().StringVar(&apiURL, "api", "https://localhost:8080", "API URL")
+	rootCmd.PersistentFlags().StringVar(&apiURL, "api", "http://localhost:8080", "API URL")
 	rootCmd.PersistentFlags().StringP("login", "l", "", "author name for copyright attribution")
 	rootCmd.PersistentFlags().StringP("token", "t", "", "author name for copyright attribution")
 	viper.BindPFlag("api", rootCmd.PersistentFlags().Lookup("api"))

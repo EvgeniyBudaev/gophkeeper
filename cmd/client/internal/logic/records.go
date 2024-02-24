@@ -177,7 +177,8 @@ func ListRecords(ctx context.Context, logger *zap.SugaredLogger) ([]models.DataR
 		logger.Error(err)
 		return nil, err
 	}
-	endpoint, _ := url.JoinPath(httpclient.APIURL, "api/user/records")
+	endpoint, _ := url.JoinPath(httpclient.APIURL, "api/user/records/list")
+	fmt.Println("List endpoint", endpoint)
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
 		logger.Error(err)

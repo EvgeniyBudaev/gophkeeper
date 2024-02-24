@@ -15,7 +15,7 @@ var (
 // User - модель пользователя
 type User struct {
 	Login    string `json:"login"`
-	Password string `json:"-"`
+	Password string `json:"password"`
 	ID       uint64 `json:"id,omitempty"`
 }
 

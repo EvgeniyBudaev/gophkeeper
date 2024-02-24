@@ -23,7 +23,7 @@ type DBStore struct {
 type Store interface {
 	CreateUser(c *gin.Context, user *models.User) (uint64, error)
 	GetUser(c *gin.Context, u *models.User) (*models.User, error)
-	PutDataRecord(c *gin.Context, data *models.DataRecord, userID uint64) error
+	PutDataRecord(c *gin.Context, data *models.DataRecord) error
 	GetUserRecord(c *gin.Context, recordName string, userID uint64) (*models.DataRecord, error)
 	GetUserRecords(c *gin.Context, userID uint64) ([]models.DataRecord, error)
 }
@@ -38,6 +38,7 @@ func NewStore(conn *sql.DB) Store {
 
 // NewPostgresConnection - создание подключения к PostgreSQL
 func NewPostgresConnection(c *config.ServerConfig) (*sql.DB, error) {
+	fmt.Println("c.DatabaseDSN: ", c.DatabaseDSN)
 	return sql.Open("postgres", c.DatabaseDSN)
 }
 
@@ -59,8 +60,8 @@ func (db *DBStore) CreateUser(c *gin.Context, u *models.User) (uint64, error) {
 // GetUser - получение пользователя
 func (db *DBStore) GetUser(c *gin.Context, u *models.User) (*models.User, error) {
 	user := models.User{}
-	query := `SELECT id, login FROM users WHERE login = $1`
-	err := db.conn.QueryRowContext(c, query, u.Login).Scan(&user.ID, &user.Login)
+	query := `SELECT id, login, password FROM users WHERE login = $1`
+	err := db.conn.QueryRowContext(c, query, u.Login).Scan(&user.ID, &user.Login, &user.Password)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("error user not found in db: %w", err)
@@ -71,14 +72,15 @@ func (db *DBStore) GetUser(c *gin.Context, u *models.User) (*models.User, error)
 }
 
 // PutDataRecord - сохранение данных
-func (db *DBStore) PutDataRecord(c *gin.Context, data *models.DataRecord, userID uint64) error {
+func (db *DBStore) PutDataRecord(c *gin.Context, data *models.DataRecord) error {
 	query := `
-		UPDATE data_records 
-		SET uploaded_at=$1, type=$2, checksum=$3, data=$4, filepath=$5, name=$6, user_id=$7, blocked=$8
-		WHERE user_id=$9
+		INSERT INTO data_records 
+		(uploaded_at, type, checksum, data, filepath, name, user_id, blocked)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+		RETURNING id
 	`
-	_, err := db.conn.ExecContext(c, query, &data.UploadedAt, &data.Type, &data.Checksum, &data.Data, &data.FilePath,
-		&data.Name, &data.UserID, &data.Blocked, &userID)
+	err := db.conn.QueryRowContext(c, query, &data.UploadedAt, &data.Type, &data.Checksum, &data.Data, &data.FilePath,
+		&data.Name, &data.UserID, &data.Blocked).Scan(&data.ID)
 	if err != nil {
 		return fmt.Errorf("error saving data: %w", err)
 	}

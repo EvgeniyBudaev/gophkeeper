@@ -29,6 +29,6 @@ func Logger(logger *zap.SugaredLogger) (gin.HandlerFunc, error) {
 			"Status", c.Writer.Status(),
 			"Size", c.Writer.Size(),
 		)
-		logger.Debugln("Data", string(body))
+		logger.Infoln("Data", string(body))
 	}, nil
 }

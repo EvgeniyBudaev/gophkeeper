@@ -29,8 +29,8 @@ func (a *App) SetupRouter() (*gin.Engine, error) {
 		recordsAPI.Use(auth.AuthMiddleware(a.logger))
 		{
 			recordsAPI.POST(rootRoute, a.PutDataRecord)
-			recordsAPI.GET(rootRoute, a.GetDataRecords)
-			recordsAPI.GET(":id", a.GetDataRecord)
+			recordsAPI.GET("list", a.GetDataRecords)
+			recordsAPI.GET(":name", a.GetDataRecord)
 		}
 	}
 	return r, nil

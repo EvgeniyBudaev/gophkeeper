@@ -30,6 +30,18 @@ ENV
 go get github.com/caarlos0/env/v6
 ```
 
+Библиотека для работы с переменными окружения ENV
+https://github.com/joho/godotenv
+```
+go get -u github.com/joho/godotenv
+```
+
+ENV Config
+https://github.com/kelseyhightower/envconfig
+```
+go get -u github.com/kelseyhightower/envconfig
+```
+
 Подключение к БД
 Драйвер для Postgres
 ```
@@ -62,6 +74,11 @@ go get -u github.com/spf13/viper
 go get -u github.com/spf13/cobra
 ```
 
+errgroup
+```
+go get -u golang.org/x/sync/errgroup
+```
+
 Миграции
 https://github.com/golang-migrate/migrate/blob/master/cmd/migrate/README.md
 https://www.appsloveworld.com/go/83/golang-migrate-installation-failing-on-ubuntu-22-04-with-the-following-gpg-error
@@ -85,4 +102,14 @@ sudo rm migrate.list
 ```
 migrate create -ext sql -dir migrations UsersCreationMigration
 migrate create -ext sql -dir migrations DataRecordsCreationMigration
+```
+
+Создание up sql файлов
+```
+migrate -path migrations -database "postgres://localhost:5432/gophkeeper?sslmode=disable&user=postgres&password=root" up
+```
+
+Создание down sql файлов
+```
+migrate -path migrations -database "postgres://localhost:5432/gophkeeper?sslmode=disable&user=postgres&password=root" down
 ```
