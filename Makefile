@@ -3,12 +3,12 @@ all: ;
 
 .PHONY: build-client
 build-client:
-	go build -o ./cmd/client/bin/gclient ./cmd/client
+	go build -o ./bin/gclient ./cmd/client
 
 .PHONY: build
 build:
-	go build -o ./cmd/gophkeeper/gophkeeper ./cmd/gophkeeper
+	go build -o ./bin/gophkeeper ./cmd/gophkeeper
 
 .PHONY: run
 run: build
-	./cmd/gophkeeper/gophkeeper -r :8080
+	./bin/gophkeeper -r :8080

@@ -1,6 +1,6 @@
 {
   "api": "http://localhost:8080",
-  "expires_at": "2024-03-25T15:31:01.535332133+03:00",
+  "expires_at": "2024-03-26T08:17:09.046750366+03:00",
   "login": "qwerty",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDg3ODg2NjEsIlVzZXJJRCI6MX0.5UApEcyPzQpz1wTVSckrxmrzrFYoCQPzjtwZRdhnMpI"
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDg4NDkwMjksIlVzZXJJRCI6MX0.hlVjVcXiVPmP01HHfxXyIlnVEdpZ_6vsUTIw7LCpN1Q"
 }

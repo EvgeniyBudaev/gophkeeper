@@ -16,7 +16,7 @@
 
 ### Регистрация клиента
 ```
-./cmd/client/bin/gclient register
+./bin/gclient register
 ```
 Вводим Login
 Вводим Password
@@ -25,34 +25,35 @@
 
 ### Авторизация клиента для получения токена
 ```
-./cmd/client/bin/gclient login
+./bin/gclient login
 ```
 Вводим Login
 Вводим Password
 
 ### Добавление данных
 ```
-./cmd/client/bin/gclient records put pass login:password secretpassword
+./bin/gclient records put pass login:password secretpassword
 ```
+- создается локальный json файл
 
 ### Получение данных
 ```
-./cmd/client/bin/gclient records list
+./bin/gclient records list
 ```
 
 ### Получение записи
 ```
-./cmd/client/bin/gclient records get secretpassword
+./bin/gclient records get secretpassword
 ```
 
 ### Синхронизация записей с сервера
-При удалении локальной папки с записями можно воспользоваться командой `./cmd/client/bin/gclient records sync`
+При удалении локальной папки с записями можно воспользоваться командой `./bin/gclient records sync`
 для восстановления записей с сервера.
 ```
-./cmd/client/bin/gclient records sync
+./bin/gclient records sync
 ```
 
 # Запуск сервера
 Для начала сервер необходимо собрать командой `make build`.
-Бинарник для запуска сервера будет находиться по пути `cmd/gophkeeper/gophkeeper$`.
+Бинарник для запуска сервера будет находиться по пути `./bin/gophkeeper`.
 Запустить клиент можно с помощью `make run`.
