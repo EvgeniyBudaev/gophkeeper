@@ -3,8 +3,8 @@ package app
 
 import (
 	"fmt"
-	"github.com/EvgeniyBudaev/gophkeeper/internal/middleware/auth"
-	ginLogger "github.com/EvgeniyBudaev/gophkeeper/internal/middleware/logger"
+	"github.com/EvgeniyBudaev/gophkeeper/internal/server/middleware/auth"
+	ginLogger "github.com/EvgeniyBudaev/gophkeeper/internal/server/middleware/logger"
 	"github.com/gin-gonic/gin"
 )
 

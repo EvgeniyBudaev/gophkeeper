@@ -1,9 +1,9 @@
 // Модуль выхода из системы
-package cmd
+package cli
 
 import (
 	"context"
-	"github.com/EvgeniyBudaev/gophkeeper/internal/logger"
+	"github.com/EvgeniyBudaev/gophkeeper/internal/server/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"

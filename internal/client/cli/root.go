@@ -1,8 +1,8 @@
 // Модуль root
-package cmd
+package cli
 
 import (
-	"github.com/EvgeniyBudaev/gophkeeper/internal/logger"
+	"github.com/EvgeniyBudaev/gophkeeper/internal/server/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"log"

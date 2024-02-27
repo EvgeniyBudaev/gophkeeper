@@ -1,7 +1,7 @@
 // Модуль расширяет функциональными возможностями
 package utils
 
-import "github.com/EvgeniyBudaev/gophkeeper/internal/models"
+import "github.com/EvgeniyBudaev/gophkeeper/internal/server/models"
 
 // GetExtension - возвращает расширение
 func GetExtension(dataType models.DataType) string {

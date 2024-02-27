@@ -6,10 +6,10 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/EvgeniyBudaev/gophkeeper/internal/adapters/store"
-	"github.com/EvgeniyBudaev/gophkeeper/internal/app"
-	"github.com/EvgeniyBudaev/gophkeeper/internal/config"
-	"github.com/EvgeniyBudaev/gophkeeper/internal/logger"
+	"github.com/EvgeniyBudaev/gophkeeper/internal/server/adapters/store"
+	"github.com/EvgeniyBudaev/gophkeeper/internal/server/app"
+	"github.com/EvgeniyBudaev/gophkeeper/internal/server/config"
+	"github.com/EvgeniyBudaev/gophkeeper/internal/server/logger"
 	"log"
 	"net/http"
 	"os"
@@ -64,7 +64,7 @@ func run() error {
 		defer l.Info("closed DB")
 		defer wg.Done()
 		<-ctx.Done()
-		conn.Close()
+		defer conn.Close()
 	}()
 
 	componentsErrs := make(chan error, 1)

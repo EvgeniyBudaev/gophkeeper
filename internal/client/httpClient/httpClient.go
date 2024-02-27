@@ -3,7 +3,7 @@ package httpClient
 
 import (
 	"crypto/tls"
-	"github.com/EvgeniyBudaev/gophkeeper/internal/logger"
+	"github.com/EvgeniyBudaev/gophkeeper/internal/server/logger"
 	"github.com/spf13/viper"
 	"log"
 	"net/http"

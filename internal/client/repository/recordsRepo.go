@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/EvgeniyBudaev/gophkeeper/internal/models"
-	"github.com/EvgeniyBudaev/gophkeeper/internal/utils"
+	"github.com/EvgeniyBudaev/gophkeeper/internal/client/utils"
+	"github.com/EvgeniyBudaev/gophkeeper/internal/server/models"
 	"os"
 	"path/filepath"
 )

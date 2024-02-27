@@ -1,11 +1,11 @@
 // Модуль содержит структуру для хранения записей.
-package cmd
+package cli
 
 import (
 	"context"
 	"errors"
-	"github.com/EvgeniyBudaev/gophkeeper/client/internal/logic"
-	"github.com/EvgeniyBudaev/gophkeeper/internal/logger"
+	"github.com/EvgeniyBudaev/gophkeeper/internal/client/logic"
+	"github.com/EvgeniyBudaev/gophkeeper/internal/server/logger"
 	"github.com/spf13/cobra"
 	"log"
 	"syscall"
