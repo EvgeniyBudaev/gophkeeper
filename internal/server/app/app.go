@@ -190,6 +190,7 @@ func (a *App) PutDataRecord(c *gin.Context) {
 		FilePath:   "",
 		UserID:     userID,
 		Name:       record.Name,
+		Key:        record.Key,
 	}
 	if record.ID != 0 {
 		data.ID = record.ID
@@ -208,14 +209,11 @@ func (a *App) GetDataRecord(c *gin.Context) {
 	res := c.Writer
 	recordName := c.Param("name")
 	userID := c.GetUint64(auth.UserIDKey.ToString())
-
 	if userID == 0 {
 		a.logger.Debug("user unauthorized")
 		res.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	fmt.Println("userID:", userID)
-	fmt.Println("recordName:", recordName)
 	record, err := a.store.GetUserRecord(c, recordName, userID)
 	if err != nil {
 		var recordNotFoundError *RecordNotFoundError

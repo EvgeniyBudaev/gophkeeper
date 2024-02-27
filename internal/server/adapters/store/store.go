@@ -75,12 +75,12 @@ func (db *DBStore) GetUser(c *gin.Context, u *models.User) (*models.User, error)
 func (db *DBStore) PutDataRecord(c *gin.Context, data *models.DataRecord) error {
 	query := `
 		INSERT INTO data_records 
-		(uploaded_at, type, checksum, data, filepath, name, user_id)
-		VALUES ($1,$2,$3,$4,$5,$6,$7)
+		(uploaded_at, type, checksum, data, filepath, name, user_id, key)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
 		RETURNING id
 	`
 	err := db.conn.QueryRowContext(c, query, &data.UploadedAt, &data.Type, &data.Checksum, &data.Data, &data.FilePath,
-		&data.Name, &data.UserID).Scan(&data.ID)
+		&data.Name, &data.UserID, &data.Key).Scan(&data.ID)
 	if err != nil {
 		return fmt.Errorf("error saving data: %w", err)
 	}
@@ -90,7 +90,7 @@ func (db *DBStore) PutDataRecord(c *gin.Context, data *models.DataRecord) error 
 // GetUserRecord- получение данных по названию записи и ID пользователя
 func (db *DBStore) GetUserRecord(c *gin.Context, recordName string, userID uint64) (*models.DataRecord, error) {
 	record := models.DataRecord{}
-	query := `SELECT id, uploaded_at, type, checksum, data, filepath, name, user_id
+	query := `SELECT id, uploaded_at, type, checksum, data, filepath, name, user_id, key
               FROM data_records
               WHERE user_id=$1 AND name=$2`
 	row := db.conn.QueryRowContext(c, query, userID, recordName)
@@ -98,7 +98,7 @@ func (db *DBStore) GetUserRecord(c *gin.Context, recordName string, userID uint6
 		return nil, fmt.Errorf("no rows found")
 	}
 	err := row.Scan(&record.ID, &record.UploadedAt, &record.Type, &record.Checksum, &record.Data, &record.FilePath,
-		&record.Name, &record.UserID)
+		&record.Name, &record.UserID, &record.Key)
 	if err != nil {
 		return nil, fmt.Errorf("error getting order: %w", err)
 	}
@@ -108,7 +108,7 @@ func (db *DBStore) GetUserRecord(c *gin.Context, recordName string, userID uint6
 // GetUserRecords - получение всех записей пользователя
 func (db *DBStore) GetUserRecords(c *gin.Context, userID uint64) ([]models.DataRecord, error) {
 	records := make([]models.DataRecord, 0)
-	query := `SELECT id, uploaded_at, type, checksum, data, filepath, name, user_id
+	query := `SELECT id, uploaded_at, type, checksum, data, filepath, name, user_id, key
               FROM data_records
               WHERE user_id=$1`
 	rows, err := db.conn.QueryContext(c, query, userID)
@@ -119,7 +119,7 @@ func (db *DBStore) GetUserRecords(c *gin.Context, userID uint64) ([]models.DataR
 	for rows.Next() {
 		record := models.DataRecord{}
 		err := rows.Scan(&record.ID, &record.UploadedAt, &record.Type, &record.Checksum, &record.Data, &record.FilePath,
-			&record.Name, &record.UserID)
+			&record.Name, &record.UserID, &record.Key)
 		if err != nil {
 			return nil, fmt.Errorf("error getting user record: %w", err)
 		}

@@ -5,10 +5,12 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/EvgeniyBudaev/gophkeeper/internal/client/httpClient"
 	"github.com/EvgeniyBudaev/gophkeeper/internal/client/repository"
+	"github.com/EvgeniyBudaev/gophkeeper/internal/client/utils"
 	"github.com/EvgeniyBudaev/gophkeeper/internal/server/models"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -68,10 +70,25 @@ func GetRecord(ctx context.Context, name string) (*models.DataRecord, error) {
 	if err = json.NewDecoder(response.Body).Decode(&record); err != nil {
 		return nil, fmt.Errorf("error decode body: %w", err)
 	}
+	// Расшифровка данных
+	decodedKey, err := base64.StdEncoding.DecodeString(record.Key)
+	if err != nil {
+		return nil, fmt.Errorf("error decoding key: %w", err)
+	}
+	decodedData, err := base64.StdEncoding.DecodeString(record.Data)
+	if err != nil {
+		return nil, fmt.Errorf("error decoding data: %w", err)
+	}
+	decryptedData, err := utils.DecryptData(decodedData, decodedKey)
+	if err != nil {
+		return nil, fmt.Errorf("error decrypting data: %w", err)
+	}
+	// Замена зашифрованных данных на расшифрованные
+	record.Data = string(decryptedData)
 	return &record, nil
 }
 
-// PutRecord - создание записи
+// PutRecord - создание записи с шифрованием
 func PutRecord(ctx context.Context, args []string) (*models.DataRecord, error) {
 	if len(args) != 3 {
 		return nil, fmt.Errorf("bad request")
@@ -99,11 +116,25 @@ func PutRecord(ctx context.Context, args []string) (*models.DataRecord, error) {
 	}
 	endpoint, _ := url.JoinPath(httpclient.APIURL, "api/user/records")
 	checksum := fmt.Sprintf("%x", md5.Sum([]byte(data)))
+	// Генерация ключа шифрования
+	key, err := utils.GenerateKey()
+	if err != nil {
+		return nil, err
+	}
+	// Шифрование данных
+	encryptedData, err := utils.EncryptData([]byte(data), key)
+	if err != nil {
+		return nil, err
+	}
+	// Кодирование ключа в base64 для передачи
+	encodedKey := base64.StdEncoding.EncodeToString(key)
+	// Объект передачи с зашифрованными данными
 	dataObj := models.DataRecordRequest{
 		Type:     models.DataType(dataType),
 		Name:     args[2],
-		Data:     data,
+		Data:     base64.StdEncoding.EncodeToString(encryptedData),
 		Checksum: checksum,
+		Key:      encodedKey,
 	}
 	dataObjB, err := json.Marshal(dataObj)
 	if err != nil {

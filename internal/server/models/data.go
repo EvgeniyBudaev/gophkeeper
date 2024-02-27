@@ -41,6 +41,7 @@ type DataRecord struct {
 	Name       string    `json:"name"`
 	User       User      `json:"-"`
 	UserID     uint64    `json:"-"`
+	Key        string    `json:"key"`
 }
 
 // DataRecordRequest - структура данных запроса
@@ -50,4 +51,5 @@ type DataRecordRequest struct {
 	Data     string   `json:"data"`
 	Name     string   `json:"name"`
 	ID       uint64   `json:"id"`
+	Key      string   `json:"key"`
 }
