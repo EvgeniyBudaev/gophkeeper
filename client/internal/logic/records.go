@@ -6,18 +6,16 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/EvgeniyBudaev/gophkeeper/client/internal/httpClient"
+	"github.com/EvgeniyBudaev/gophkeeper/client/internal/repository"
 	"github.com/EvgeniyBudaev/gophkeeper/internal/models"
-	"github.com/EvgeniyBudaev/gophkeeper/internal/utils"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -29,37 +27,15 @@ func SaveOrUpdateData(logger *zap.SugaredLogger, data *models.DataRecord) error 
 		logger.Error(err)
 		return err
 	}
-	ext := utils.GetExtension(data.Type)
-	filename := fmt.Sprintf("%s%s", data.Name, ext)
-	filepath := filepath.Join(".", login, filename)
-	localFile, err := os.OpenFile(filepath, os.O_RDONLY, 0600)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			wrLocalFile, err := os.OpenFile(filepath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0600)
-			if err != nil {
-				return err
-			}
-			defer wrLocalFile.Close()
-			if err := json.NewEncoder(wrLocalFile).Encode(data); err != nil {
-				return err
-			}
-			return nil
-		}
-		return err
+	var repo repository.DataRecordRepository
+	switch data.Type {
+	case models.PASS:
+		repo = repository.NewPassRepository(login)
+	default:
+		return fmt.Errorf("unsupported data type")
 	}
-	var localData models.DataRecord
-	if err := json.NewDecoder(localFile).Decode(&localData); err != nil {
+	if err := repo.Add(data); err != nil {
 		return err
-	}
-	if err := localFile.Close(); err != nil {
-		return err
-	}
-	wrLocalFile, err := os.OpenFile(filepath, os.O_RDWR, 0600)
-	if data.ID != 0 && localData.ID == 0 {
-		wrLocalFile.Truncate(0)
-		if err := json.NewEncoder(wrLocalFile).Encode(data); err != nil {
-			return err
-		}
 	}
 	return nil
 }
