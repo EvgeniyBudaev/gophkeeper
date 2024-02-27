@@ -1,5 +1,5 @@
 // Модуль клиента
-package client
+package httpClient
 
 import (
 	"crypto/tls"
@@ -11,18 +11,18 @@ import (
 )
 
 // httpClientInstance - синглетон клиента
-type httpClientInstance struct {
+type HttpClientInstance struct {
 	*http.Client
 	APIURL string
 }
 
 var (
-	httpClient *httpClientInstance
+	httpClient *HttpClientInstance
 	once       sync.Once
 )
 
 // GetHTTPClient - возвращает клиент
-func GetHTTPClient() *httpClientInstance {
+func GetHTTPClient() *HttpClientInstance {
 	once.Do(
 		func() {
 			l, err := logger.NewLogger()
@@ -35,7 +35,7 @@ func GetHTTPClient() *httpClientInstance {
 				httpClient = nil
 				return
 			}
-			httpClient = &httpClientInstance{
+			httpClient = &HttpClientInstance{
 				Client: &http.Client{
 					Transport: &http.Transport{
 						TLSClientConfig: &tls.Config{InsecureSkipVerify: true},

@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/EvgeniyBudaev/gophkeeper/cmd/client/internal/client"
+	"github.com/EvgeniyBudaev/gophkeeper/client/internal/httpClient"
 	"github.com/EvgeniyBudaev/gophkeeper/internal/models"
 	"github.com/EvgeniyBudaev/gophkeeper/internal/utils"
 	"github.com/spf13/viper"
@@ -26,11 +26,6 @@ func SaveOrUpdateData(logger *zap.SugaredLogger, data *models.DataRecord) error 
 	login := viper.GetString("login")
 	if login == "" {
 		err := fmt.Errorf("not logged in")
-		logger.Error(err)
-		return err
-	}
-	if err := utils.CreateUsersDir(login); err != nil {
-		err = fmt.Errorf("error creating users dir: %w", err)
 		logger.Error(err)
 		return err
 	}
@@ -75,7 +70,7 @@ func GetRecord(ctx context.Context, name string) (*models.DataRecord, error) {
 	if token == "" {
 		return nil, fmt.Errorf("No auth data, login first")
 	}
-	httpclient := client.GetHTTPClient()
+	httpclient := httpClient.GetHTTPClient()
 	if httpclient == nil {
 		return nil, fmt.Errorf("configuration error")
 	}
@@ -122,7 +117,7 @@ func PutRecord(ctx context.Context, args []string) (*models.DataRecord, error) {
 	if token == "" {
 		return nil, fmt.Errorf("No auth data, login first")
 	}
-	httpclient := client.GetHTTPClient()
+	httpclient := httpClient.GetHTTPClient()
 	if httpclient == nil {
 		return nil, fmt.Errorf("configuration error")
 	}
@@ -171,14 +166,13 @@ func ListRecords(ctx context.Context, logger *zap.SugaredLogger) ([]models.DataR
 		logger.Error(err)
 		return nil, err
 	}
-	httpclient := client.GetHTTPClient()
+	httpclient := httpClient.GetHTTPClient()
 	if httpclient == nil {
 		err := fmt.Errorf("configuration error")
 		logger.Error(err)
 		return nil, err
 	}
 	endpoint, _ := url.JoinPath(httpclient.APIURL, "api/user/records/list")
-	fmt.Println("List endpoint", endpoint)
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
 		logger.Error(err)

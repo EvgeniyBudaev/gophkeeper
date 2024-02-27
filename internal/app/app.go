@@ -28,8 +28,7 @@ type App struct {
 }
 
 const (
-	bcryptCost   = 7
-	maxCookieAge = 3600 * 24 * 30
+	maxExpiresIn = 3600 * 24 * 30
 )
 
 // NewApp - конструктор приложения
@@ -105,7 +104,7 @@ func (a *App) Login(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, models.TokenResponse{
 		Token:     jwt,
-		ExpiresIn: maxCookieAge,
+		ExpiresIn: maxExpiresIn,
 	})
 }
 
@@ -148,7 +147,7 @@ func (a *App) Register(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, models.TokenResponse{
 		Token:     jwt,
-		ExpiresIn: maxCookieAge,
+		ExpiresIn: maxExpiresIn,
 	})
 }
 
@@ -191,7 +190,6 @@ func (a *App) PutDataRecord(c *gin.Context) {
 		FilePath:   "",
 		UserID:     userID,
 		Name:       record.Name,
-		Blocked:    false,
 	}
 	if record.ID != 0 {
 		data.ID = record.ID

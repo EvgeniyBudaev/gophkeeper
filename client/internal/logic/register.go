@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/EvgeniyBudaev/gophkeeper/cmd/client/internal/client"
+	"github.com/EvgeniyBudaev/gophkeeper/client/internal/httpClient"
 	"github.com/EvgeniyBudaev/gophkeeper/internal/models"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -15,7 +15,7 @@ import (
 
 // Register - регистрация нового пользователя
 func Register(logger *zap.SugaredLogger, login string, password string) (creds *models.TokenResponse, err error) {
-	httpclient := client.GetHTTPClient()
+	httpclient := httpClient.GetHTTPClient()
 	if httpclient == nil {
 		return nil, fmt.Errorf("configuration error")
 	}

@@ -7,6 +7,5 @@ CREATE TABLE data_records
     data TEXT,
     filepath VARCHAR(255),
     name VARCHAR(255) NOT NULL UNIQUE,
-    user_id BIGINT NOT NULL,
-    blocked BOOLEAN NOT NULL
+    user_id BIGINT NOT NULL
 );

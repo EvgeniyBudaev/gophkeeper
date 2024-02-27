@@ -5,7 +5,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/EvgeniyBudaev/gophkeeper/cmd/client/internal/logic"
+	"github.com/EvgeniyBudaev/gophkeeper/client/internal/httpClient"
+	"github.com/EvgeniyBudaev/gophkeeper/client/internal/logic"
 	"github.com/EvgeniyBudaev/gophkeeper/internal/logger"
 	"github.com/EvgeniyBudaev/gophkeeper/internal/utils"
 	"github.com/spf13/cobra"
@@ -44,7 +45,8 @@ func Login(ctx context.Context, logger *zap.SugaredLogger) {
 			logger.Infoln("Password:")
 			var password string
 			fmt.Scanln(&password)
-			creds, err := logic.Login(ctx, logger.Named("logic"), login, password)
+			httpclient := httpClient.GetHTTPClient()
+			creds, err := logic.Login(ctx, httpclient, login, password)
 			if err != nil {
 				var target *net.OpError
 				if errors.As(err, &target) {

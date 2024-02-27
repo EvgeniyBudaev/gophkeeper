@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/EvgeniyBudaev/gophkeeper/cmd/client/internal/cmd"
+	"github.com/EvgeniyBudaev/gophkeeper/client/internal/cmd"
 	"github.com/EvgeniyBudaev/gophkeeper/internal/logger"
 	"log"
 )

@@ -41,7 +41,6 @@ type DataRecord struct {
 	Name       string    `json:"name"`
 	User       User      `json:"-"`
 	UserID     uint64    `json:"-"`
-	Blocked    bool      `json:"blocked"`
 }
 
 // DataRecordRequest - структура данных запроса

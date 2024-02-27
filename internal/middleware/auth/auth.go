@@ -68,6 +68,10 @@ func GetUserID(tokenString string) (uint64, error) {
 	if claims.UserID == 0 {
 		return 0, ErrNoUserInToken
 	}
+	// Проверка на истечение срока действия токена
+	if time.Now().Unix() > claims.ExpiresAt.Time.Unix() {
+		return 0, errors.New("token has expired")
+	}
 	return claims.UserID, nil
 }
 

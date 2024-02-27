@@ -6,7 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/EvgeniyBudaev/gophkeeper/cmd/client/internal/client"
+	"github.com/EvgeniyBudaev/gophkeeper/client/internal/httpClient"
+	"github.com/EvgeniyBudaev/gophkeeper/client/internal/logger"
 	"github.com/EvgeniyBudaev/gophkeeper/internal/models"
 	"go.uber.org/zap"
 	"net/http"
@@ -20,8 +21,7 @@ type LoginReq struct {
 }
 
 // Login - логин
-func Login(ctx context.Context, logger *zap.SugaredLogger, login string, password string) (creds *models.TokenResponse, err error) {
-	httpclient := client.GetHTTPClient()
+func Login(ctx context.Context, httpclient *httpClient.HttpClientInstance, login string, password string) (creds *models.TokenResponse, err error) {
 	if httpclient == nil {
 		return nil, fmt.Errorf("configuration error")
 	}
@@ -38,7 +38,7 @@ func Login(ctx context.Context, logger *zap.SugaredLogger, login string, passwor
 	}
 	defer func() {
 		if err := response.Body.Close(); err != nil {
-			logger.Errorf("error: %w", err)
+			logger.Log.Debug("error: %w", zap.Error(err))
 		}
 	}()
 	if response.StatusCode != http.StatusOK {

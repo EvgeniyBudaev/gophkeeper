@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/EvgeniyBudaev/gophkeeper/cmd/client/internal/logic"
+	"github.com/EvgeniyBudaev/gophkeeper/client/internal/logic"
 	"github.com/EvgeniyBudaev/gophkeeper/internal/logger"
 	"github.com/EvgeniyBudaev/gophkeeper/internal/utils"
 	"github.com/spf13/cobra"
